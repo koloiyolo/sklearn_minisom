@@ -1,0 +1,4 @@
+__pycache__/
+dist/
+dist/
+sklearn_minisom.egg-info/

@@ -1,0 +1,23 @@
+[project]
+name = "sklearn_minisom"
+version = "0.0.1"
+authors = [
+  { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
+]
+description = "MiniSom library wrapper for seamless integration with SciKit-learn library."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/koloiyolo/sklearn_minisom/"
+Issues = "https://github.com/koloiyolo/sklearn_minisom/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "pytest", "scikit-learn", "minisom>=2.3.3", "numpy", "scipy"]
+build-backend = "setuptools.build_meta"
