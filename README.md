@@ -18,6 +18,8 @@ tools like GridSearchCV for hyperparameter optimization. It also provides easy, 
 
 Example clustering datasets from [Comparation of clustering algorithms on SciKit-learn](https://scikit-learn.org/stable/modules/clustering.html)
 
+![image](https://github.com/user-attachments/assets/9bf00573-1dee-455b-bd24-632b16dbec0b)
+
 This is separate project and not part of MiniSom library due to creator's of the original project aim to keep their as lightweight as possible. 
 
 
@@ -82,3 +84,4 @@ y = pipeline.fit_predict(X)
 ```
 Now let's take a look at what we've got.
 
+![image-1](https://github.com/user-attachments/assets/2111a12b-8e0f-453d-83d2-cb029465f112)
