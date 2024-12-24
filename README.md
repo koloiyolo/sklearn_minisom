@@ -1,6 +1,11 @@
+[![PyPI version fury.io](https://badge.fury.io/py/sklearn_minisom.svg)](https://pypi.org/project/sklearn_minisom/)
+[![Downloads](https://static.pepy.tech/personalized-badge/sklearn_minisom?period=total&units=international_system&left_color=black&right_color=blue&left_text=Downloads)](https://pepy.tech/project/sklearn_minisom)
+
 # sklearn_minisom
 
-MiniSom library wrapper for seamless integration with SciKit-learn library.
+MiniSom is Numpy based implementation of the Self Organizing Maps (SOM). SOM is a type of Artificial Neural Network able to convert complex, nonlinear statistical relationships between high-dimensional data items into simple geometric relationships on a low-dimensional display. Minisom is designed to allow researchers to easily build on top of it and to give students the ability to quickly grasp its details.
+
+This is MiniSom library wrapper for seamless integration with SciKit-learn package.
 
 Credits to:
 * Wrapped library: [MiniSom by Giuseppe Vettigli](https://github.com/JustGlowing/minisom)
@@ -11,8 +16,12 @@ This wrapper aims to integrate MiniSOM library into SciKit-learn ecosystem.
 It enables easy integration with Scikit-learn pipelines and 
 tools like GridSearchCV for hyperparameter optimization. It also provides easy, scikit-learn like API for developers to interact with while aiming to sustain high flexibility and capabilities of MiniSom library.
 
-It is separate project and not part of MiniSom library due to creator's of the original project aim to keep their as lightweight as possible. 
+Example clustering datasets from [Comparation of clustering algorithms on SciKit-learn](https://scikit-learn.org/stable/modules/clustering.html)
 
+This is separate project and not part of MiniSom library due to creator's of the original project aim to keep their as lightweight as possible. 
+
+
+### Table of content
 - [Installation](#installation)
 - [Examples](#Examples)
 
@@ -22,59 +31,54 @@ Just use pip:
 
     pip install sklearn_minisom
 
+Dependencies:
+* minisom>=2.3.3
+* scikit-learn
+* numpy
+* scipy
+* pytest
+
 
 ## Examples
 
-Predict Iris Dataset clusters.
+Just use it like any other scikit-learn cluster algorithm.
+
+Let's start with importing required libraries and dataset.
 
 ```python
-from sklearn_minisom import MiniSOM
-from sklearn import datasets
-
-iris = datasets.load_iris()
-iris_data = iris.data
-
-som = MiniSOM()
-som.fit(iris_data)
-
-y = som.predict(iris_data)
-print(y)
-```
-
-Transform Iris Dataset data.
-```python
-from sklearn_minisom import MiniSOM
-from sklearn import datasets
-
-iris = datasets.load_iris()
-iris_data = iris.data
-
-som = MiniSOM()
-
-som.fit_transform(iris_data)
-```
-
-
-Use to build SciKit-learn pipelines
-```python
+from sklearn.datasets import load_wine
 from sklearn_minisom import MiniSOM
 from sklearn.preprocessing import StandardScaler
+
+data = load_wine()
+X = data.data
+X = StandardScaler().fit_transform(X)
+```
+
+You can use fit and predict separately.
+```python
+som = MiniSOM(3, 1, random_seed=40)
+som.fit(X)
+y = som.predict(X)
+```
+
+Or simply use convenient function.
+```python
+som = MiniSOM(3, 1, random_seed=40)
+y = som.fit_predict(X)
+```
+
+
+Alternatively you can also use SciKit-learn pipelines.
+```python
 from sklearn.pipeline import Pipeline
 
-X = [[ 0.80,  0.55,  0.22,  0.03],
-        [ 0.82,  0.50,  0.23,  0.03],
-        [ 0.80,  0.54,  0.22,  0.03],
-        [ 0.80,  0.53,  0.26,  0.03],
-        [ 0.79,  0.56,  0.22,  0.03],
-        [ 0.75,  0.60,  0.25,  0.03],
-        [ 0.77,  0.59,  0.22,  0.03]]  
-
-pipeline = Pipeline([
+pipeline = ([
     ('scaler', StandardScaler()),
-    ('classifier', MiniSOM(x=10, y=5, sigma=1, random_seed=42))
-    ])
+    ('classifier', MiniSOM(3, 1, random_seed=40))
+])
 
 y = pipeline.fit_predict(X)
-print(y)
 ```
+Now let's take a look at what we've got.
 
