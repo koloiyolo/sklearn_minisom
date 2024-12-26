@@ -1,0 +1,38 @@
+name: Upload Python Package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"] 
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build pytest pycodestyle
+          python -m pip install .
+
+      - name: Checking style
+        run: |
+          pycodestyle *.py
+
+      - name: Check unit tests and build
+        run: |
+          python -m pytest sklearn_minisom.py
+          python -m build
