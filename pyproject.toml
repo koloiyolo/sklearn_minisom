@@ -8,8 +8,7 @@ dependencies = [
   "scikit-learn",
   "minisom>=2.3.3",
   "numpy",
-  "scipy",
-  "pytest"
+  "scipy"
 ]
 
 description = "MiniSom library wrapper for seamless integration with SciKit-learn library."
