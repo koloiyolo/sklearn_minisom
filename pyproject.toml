@@ -1,6 +1,6 @@
 [project]
 name = "sklearn_minisom"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
 ]
@@ -8,8 +8,7 @@ dependencies = [
   "scikit-learn",
   "minisom>=2.3.3",
   "numpy",
-  "scipy",
-  "pytest"
+  "scipy"
 ]
 
 description = "MiniSom library wrapper for seamless integration with SciKit-learn library."

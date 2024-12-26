@@ -5,25 +5,26 @@ Author: Jakub Kołodziej
 from minisom import MiniSom
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy import sparse
-from numpy import array, ravel_multi_index, all
+from numpy import array, ravel_multi_index, all, linalg
 
 # for unit tests
 import unittest
 
+
 class MiniSOM(BaseEstimator, TransformerMixin):
-    def __init__(self, x=10, y=10, sigma=1.0, learning_rate=0.5, num_iteration=1000, 
-                 decay_function='asymptotic_decay', 
+    def __init__(self, x=10, y=10, sigma=1.0, learning_rate=0.5,
+                 num_iteration=1000, decay_function='asymptotic_decay',
                  neighborhood_function='gaussian', topology='rectangular',
                  activation_distance='euclidean', random_seed=None,
                  sigma_decay_function='asymptotic_decay',
-                 random_order=False, verbose=False, 
+                 random_order=False, verbose=False,
                  use_epochs=False, fixed_points=None):
         """
-        Minisom wrapper that integrates seamlessly with the Scikit-learn ecosystem, 
-        providing a familiar API for users. 
-        
-        It enables easy integration with Scikit-learn pipelines and 
-        tools like GridSearchCV for hyperparameter optimization. 
+        Minisom wrapper that integrates seamlessly with the
+        Scikit-learn ecosystem, providing a familiar API for users.
+
+        It enables easy integration with Scikit-learn pipelines and
+        tools like GridSearchCV for hyperparameter optimization.
 
         Parameters
         ----------
@@ -119,13 +120,13 @@ class MiniSOM(BaseEstimator, TransformerMixin):
             the best matching unit.
         """
 
-        self.x = x 
+        self.x = x
         self.y = y
         self.sigma = sigma
         self.learning_rate = learning_rate
         self.num_iteration = num_iteration
-        self.decay_function = decay_function 
-        self.neighborhood_function = neighborhood_function 
+        self.decay_function = decay_function
+        self.neighborhood_function = neighborhood_function
         self.topology = topology
         self.activation_distance = activation_distance
         self.random_seed = random_seed
@@ -140,8 +141,6 @@ class MiniSOM(BaseEstimator, TransformerMixin):
         Initializes SOM algorithm from minisom library
         and fits on it data matrix.
 
-        Commented out lines come in MiniSom 2.3.3 
-
         Parameters
         ----------
         X : np.array or list
@@ -154,29 +153,59 @@ class MiniSOM(BaseEstimator, TransformerMixin):
             X = X.toarray()
 
         self.som = MiniSom(self.x, self.y, X.shape[1],
-                           sigma=self.sigma, 
+                           sigma=self.sigma,
                            learning_rate=self.learning_rate,
                            decay_function=self.decay_function,
                            neighborhood_function=self.neighborhood_function,
                            topology=self.topology,
                            activation_distance=self.activation_distance,
                            random_seed=self.random_seed,
-                           sigma_decay_function=self.sigma_decay_function
-                          )
+                           sigma_decay_function=self.sigma_decay_function)
 
+        self.som.random_weights_init(X)
+        self.init_weights_ = self.som.get_weights()
+        """
+        labels_ : ndarray of shape (n_samples,)
+
+        Returns the initial weights of the neural network.
+        """
         self.som.train(X, self.num_iteration,
-                       random_order=self.random_order, 
+                       random_order=self.random_order,
                        verbose=self.verbose,
-                       use_epochs=self.use_epochs, 
-                       fixed_points=self.fixed_points
-                      )
-                       
+                       use_epochs=self.use_epochs,
+                       fixed_points=self.fixed_points)
+
+        self.labels_ = self.predict(X)
+        """
+        labels_ : ndarray of shape (n_samples,)
+
+        Labels of each point.
+        """
+        self.weights_ = self.som.get_weights()
+        """
+        weights_ : ndarray of shape (grid_size_x, grid_size_y, feature_size)
+
+        Returns the weights of the neural network.
+        """
+        self.n_features_in_ = len(X[0])
+        """
+        n_features_in_ : int
+
+        Number of features seen during fit.
+        """
+        self.inertia_ = self._calculate_inertia(X=X)
+        """
+        inertia_ : float
+
+        Sum of squared distances of samples to their closest neuron weight
+        vector, which provides a measure of the quality of the mapping.
+        """
         return self
 
     def transform(self, X):
         """
-        Transform the data by finding the best matching unit (BMU) for each sample.
-        Returns the BMU coordinates for each input sample.
+        Transform the data by finding the best matching unit (BMU) for
+        each sample. Returns the BMU coordinates for each input sample.
 
         Parameters
         ----------
@@ -195,8 +224,8 @@ class MiniSOM(BaseEstimator, TransformerMixin):
     def predict(self, X):
         """
         Predict the cluster assignment (BMU) for each sample.
-        Here, we return the grid position (BMU) for each sample as the cluster assignment.
-        We treat each unique BMU as a distinct cluster.
+        Returns the grid position (BMU) for each sample as the
+        cluster assignment. Treats each unique BMU as a distinct cluster.
 
         Parameters
         ----------
@@ -216,7 +245,7 @@ class MiniSOM(BaseEstimator, TransformerMixin):
 
     def fit_transform(self, X, y=None):
         """
-        Fit the SOM and return the transformed 
+        Fit the SOM and return the transformed
         BMU coordinates for each input sample.
 
         Convenience method; equivalent to calling fit(X) followed by
@@ -267,8 +296,8 @@ class MiniSOM(BaseEstimator, TransformerMixin):
 
     def get_params(self, deep=True):
         """
-        Get parameters for this estimator.
-        
+        Get parameters of the estimator.
+
         Helpful for hyperparameter tuning using GridSearchCV.
 
         Parameters
@@ -288,10 +317,10 @@ class MiniSOM(BaseEstimator, TransformerMixin):
             "sigma": self.sigma,
             "learning_rate": self.learning_rate,
             "num_iteration": self.num_iteration,
-            "decay_function": self.decay_function, 
-            "neighborhood_function": self.neighborhood_function, 
+            "decay_function": self.decay_function,
+            "neighborhood_function": self.neighborhood_function,
             "topology": self.topology,
-            "activation_distance": self.activation_distance, 
+            "activation_distance": self.activation_distance,
             "random_seed": self.random_seed,
             "sigma_decay_function": self.sigma_decay_function,
             "random_order": self.random_order,
@@ -299,8 +328,6 @@ class MiniSOM(BaseEstimator, TransformerMixin):
             "use_epochs": self.use_epochs,
             "fixed_points": self.fixed_points
         }
-
-
 
     def set_params(self, **params):
 
@@ -327,13 +354,37 @@ class MiniSOM(BaseEstimator, TransformerMixin):
             setattr(self, param, value)
         return self
 
+    def _calculate_inertia(self, X):
+        """
+        Custom inertia function to measure the compactness of clusters
+        in the context of Self-Organizing Maps (SOM).
+
+        Parameters
+        ----------
+        X : np.array
+            Data matrix.
+
+        Returns
+        -------
+        float
+            The inertia score based on distances to nearest SOM neuron.
+        """
+        inertia = 0
+        for i in range(X.shape[0]):
+            bmu = self.som.winner(X[i])
+            distance = linalg.norm(X[i] - self.som.get_weights()[bmu[0],
+                                   bmu[1]])
+            inertia += distance ** 2
+
+        return inertia / X.shape[0]
+
 
 class TestMinisom(unittest.TestCase):
     def test_initialization(self):
-        som = MiniSOM(x=2, y=10, sigma=2.0, learning_rate=0.7, num_iteration=100,
-                      neighborhood_function='test1', topology='test2',
-                      activation_distance='test3')
-        
+        som = MiniSOM(x=2, y=10, sigma=2.0, learning_rate=0.7,
+                      num_iteration=100, neighborhood_function='test1',
+                      topology='test2', activation_distance='test3')
+
         self.assertEqual(som.x, 2)
         self.assertEqual(som.y, 10)
         self.assertEqual(som.sigma, 2.0)
@@ -345,29 +396,37 @@ class TestMinisom(unittest.TestCase):
 
     def test_fit(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         som.fit(X)
 
         self.assertIsNotNone(som.som)
 
     def test_fit(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         som.fit(X)
 
         self.assertIsNotNone(som.som)
 
     def test_transform(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         som.fit(X)
         transformed = som.transform(X)
-        
-        self.assertEqual(transformed.shape, (X.shape[0], 2)) 
+
+        self.assertEqual(transformed.shape, (X.shape[0], 2))
 
     def test_predict(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         som.fit(X, y=[1, 2, 3, 4])
         predicted = som.predict(X)
 
@@ -376,42 +435,54 @@ class TestMinisom(unittest.TestCase):
 
     def test_fit_transform(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         transformed = som.fit_transform(X)
 
         self.assertEqual(transformed.shape, (X.shape[0], 2))
 
     def test_fit_transform_set_y(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
 
         transformed = som.fit_transform(X)
-        transformed_with_y = som.fit_transform(X, y=[1, 2, 3, 4]) 
+        transformed_with_y = som.fit_transform(X, y=[1, 2, 3, 4])
 
         self.assertEqual(transformed.shape, (X.shape[0], 2))
 
     def test_fit_predict(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000, random_seed=42)
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000,
+                      random_seed=42)
 
-        predicted = som.fit_predict(X)  
+        predicted = som.fit_predict(X)
 
         self.assertTrue(all(predicted == predicted.astype(int)))
         self.assertEqual(predicted.shape, (X.shape[0],))
 
     def test_fit_predict_set_y(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
-        som = MiniSOM(x=3, y=3, sigma=1.0, learning_rate=0.5, num_iteration=1000, random_seed=42)
-        
+        som = MiniSOM(x=3, y=3, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000,
+                      random_seed=42)
+
         predicted = som.fit_predict(X)
-        predicted_with_y = som.fit_predict(X, y=[1, 2, 3, 4]) 
+        predicted_with_y = som.fit_predict(X, y=[1, 2, 3, 4])
 
         self.assertTrue(all(predicted == predicted.astype(int)))
         self.assertEqual(predicted.any(), predicted_with_y.any())
-        self.assertEqual(predicted.shape, (X.shape[0],)) 
+        self.assertEqual(predicted.shape, (X.shape[0],))
 
     def test_set_params(self):
-        som = MiniSOM(x=5, y=5, sigma=1.0, learning_rate=0.5, num_iteration=1000)
+        som = MiniSOM(x=5, y=5, sigma=1.0,
+                      learning_rate=0.5,
+                      num_iteration=1000)
         som.set_params(sigma=0.8, learning_rate=0.3)
         self.assertEqual(som.sigma, 0.8)
         self.assertEqual(som.learning_rate, 0.3)
