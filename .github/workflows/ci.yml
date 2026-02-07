@@ -62,3 +62,10 @@ jobs:
           uv run python -m unittest
         env:
           UV_PYTHON: ${{ matrix.python-version }}
+
+      - name: Run test build
+        if: always()
+        run: |
+          uv build
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
