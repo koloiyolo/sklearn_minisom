@@ -1,0 +1,57 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    if: >
+      github.event_name == 'push'
+      ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.user.login == github.repository_owner
+      )
+      ||
+      github.event_name == 'workflow_dispatch'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: |
+          uv sync
+
+      - name: Install pre-commit
+        run: |
+          uv pip install pre-commit
+
+      - name: Run ruff via pre-commit
+        run: |
+          uv run pre-commit run --all-files
+
+      - name: Run unit tests
+        run: |
+          uv run python -m unittest
