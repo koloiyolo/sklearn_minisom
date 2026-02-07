@@ -1,19 +1,11 @@
 [project]
 name = "sklearn_minisom"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
 ]
-dependencies = [
-  "scikit-learn",
-  "minisom>=2.3.3",
-  "numpy",
-  "scipy"
-]
-
 description = "MiniSom library wrapper for seamless integration with SciKit-learn library."
 readme = "README.md"
-requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -21,10 +13,17 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
+requires-python = ">=3.11"
+dependencies = [
+    "minisom>=2.3.5",
+    "numpy>=2.4.2",
+    "scikit-learn>=1.8.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/koloiyolo/sklearn_minisom/"
 Issues = "https://github.com/koloiyolo/sklearn_minisom/issues"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
