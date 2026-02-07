@@ -12,7 +12,7 @@ Credits to:
 
 * SciKit-learn: [Docs](https://scikit-learn.org/stable/) [Github](https://github.com/scikit-learn/scikit-learn)
 
-This wrapper aims to integrate MiniSOM library into SciKit-learn ecosystem.
+This wrapper aims to integrate SklearnMinisom library into SciKit-learn ecosystem.
 It enables easy integration with Scikit-learn pipelines and 
 tools like GridSearchCV for hyperparameter optimization. It also provides easy, scikit-learn like API for developers to interact with while aiming to sustain high flexibility and capabilities of MiniSom library.
 
@@ -38,7 +38,6 @@ Dependencies:
 * minisom>=2.3.3
 * scikit-learn
 * numpy
-* scipy
 
 ## Examples
 
@@ -48,7 +47,7 @@ Let's start with importing required libraries and dataset.
 
 ```python
 from sklearn.datasets import load_wine
-from sklearn_minisom import MiniSOM
+from sklearn_minisom import SklearnMinisom
 from sklearn.preprocessing import StandardScaler
 
 data = load_wine()
@@ -58,14 +57,14 @@ X = StandardScaler().fit_transform(X)
 
 You can use fit and predict separately.
 ```python
-som = MiniSOM(3, 1, random_seed=40)
+som = SklearnMinisom(3, 1, random_seed=40)
 som.fit(X)
 y = som.predict(X)
 ```
 
 Or simply use convenient function.
 ```python
-som = MiniSOM(3, 1, random_seed=40)
+som = SklearnMinisom(3, 1, random_seed=40)
 y = som.fit_predict(X)
 ```
 
@@ -76,7 +75,7 @@ from sklearn.pipeline import Pipeline
 
 pipeline = ([
     ('scaler', StandardScaler()),
-    ('classifier', MiniSOM(3, 1, random_seed=40))
+    ('classifier', SklearnMinisom(3, 1, random_seed=40))
 ])
 
 y = pipeline.fit_predict(X)
@@ -89,7 +88,7 @@ Now let's take a look at what we've got.
 
 | Class | Description |
 | -------- | -------------- |
-| MiniSOM() | Main class of the library, used to initialize the Self-Organizing Maps algorithm|
+| SklearnMinisom() | Main class of the library, used to initialize the Self-Organizing Maps algorithm|
 
 | Parameters | Description|
 | -------- | -------------- |
