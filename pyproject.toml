@@ -25,5 +25,5 @@ Homepage = "https://github.com/koloiyolo/sklearn_minisom/"
 Issues = "https://github.com/koloiyolo/sklearn_minisom/issues"
 
 [build-system]
-requires = ["uv_build>=0.12.0,<0.12.3"]
+requires = ["uv_build>=0.12.0,<0.12.6"]
 build-backend = "uv_build"
