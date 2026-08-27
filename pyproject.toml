@@ -1,6 +1,6 @@
 [project]
 name = "sklearn_minisom"
-version = "0.0.5"
+version = "0.1.0"
 authors = [
   { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
 ]
@@ -27,6 +27,3 @@ Issues = "https://github.com/koloiyolo/sklearn_minisom/issues"
 [build-system]
 requires = ["uv_build>=0.12.0,<0.12.6"]
 build-backend = "uv_build"
-
-[tool.ty.environment]
-root = ["src/"]
