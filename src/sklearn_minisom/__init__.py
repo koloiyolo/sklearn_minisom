@@ -7,125 +7,78 @@ from numpy import array, linalg, ravel_multi_index
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from sklearn_minisom.parameters import (
+    ActivationDistance,
+    DecayFunction,
+    NeighborhoodFunction,
+    SigmaDecayFunction,
+    Topology,
+)
+
 
 class SklearnMinisom(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        x=10,
-        y=10,
-        sigma=1.0,
-        learning_rate=0.5,
-        num_iteration=1000,
-        decay_function="asymptotic_decay",
-        neighborhood_function="gaussian",
-        topology="rectangular",
-        activation_distance="euclidean",
-        random_seed=None,
-        sigma_decay_function="asymptotic_decay",
-        random_order=False,
-        verbose=False,
-        use_epochs=False,
-        fixed_points=None,
+        x: int = 10,
+        y: int = 10,
+        sigma: float = 1.0,
+        learning_rate: float = 0.5,
+        num_iteration: int = 1000,
+        decay_function: DecayFunction = DecayFunction.InverseDecayToZero,
+        neighborhood_function: NeighborhoodFunction = NeighborhoodFunction.Gaussian,
+        topology: Topology = Topology.Rectangular,
+        activation_distance: ActivationDistance = ActivationDistance.Euclidean,
+        random_seed: int | None = None,
+        sigma_decay_function: SigmaDecayFunction = SigmaDecayFunction.InverseDecayToOne,
+        random_order: bool = False,
+        verbose: bool = False,
+        use_epochs: bool = False,
+        fixed_points: dict[int, tuple[int, int]] | None = None,
     ):
-        """
-        Minisom wrapper that integrates seamlessly with the
-        Scikit-learn ecosystem, providing a familiar API for users.
+        """Initialize a MiniSom wrapper for use with scikit-learn.
 
-        It enables easy integration with Scikit-learn pipelines and
-        tools like GridSearchCV for hyperparameter optimization.
+        The estimator integrates with scikit-learn pipelines and tools such as
+        ``GridSearchCV`` for hyperparameter optimization.
 
-        Parameters
-        ----------
-        x : int
-            x dimension of the SOM.
-
-        y : int
-            y dimension of the SOM.
-
-        sigma : float, optional (default=1)
-            Spread of the neighborhood function.
-
-            Needs to be adequate to the dimensions of the map
-            and the neighborhood function. In some cases it
-            helps to set sigma as sqrt(x^2 +y^2).
-
-        learning_rate : float, optional (default=0.5)
-            Initial learning rate.
-
-            Adequate values are dependent on the data used for training.
-
-            By default, at the iteration t, we have:
-                learning_rate(t) = learning_rate / (1 + t * (100 / max_iter))
-
-        num_iteration : int, optional (default=1000)
-            Number of iterations.
-
-            Adequate values are dependent on the data used for training.
-
-        decay_function : string or callable, optional
-        (default='inverse_decay_to_zero')
-            Function that reduces learning_rate at each iteration.
-            Possible values: 'inverse_decay_to_zero', 'linear_decay_to_zero',
-                             'asymptotic_decay' or callable
-
-            If a custom decay function using a callable
-            it will need to to take in input
-            three parameters in the following order:
-
-            1. learning rate
-            2. current iteration
-            3. maximum number of iterations allowed
-
-            Note that if a lambda function is used to define the decay
-            MiniSom will not be pickable anymore.
-
-        neighborhood_function : string, optional (default='gaussian')
-            Function that weights the neighborhood of a position in the map.
-            Possible values: 'gaussian', 'mexican_hat', 'bubble', 'triangle'
-
-        topology : string, optional (default='rectangular')
-            Topology of the map.
-            Possible values: 'rectangular', 'hexagonal'
-
-        activation_distance : string, callable optional (default='euclidean')
-            Distance used to activate the map.
-            Possible values: 'euclidean', 'cosine', 'manhattan', 'chebyshev'
-
-            Example of callable that can be passed:
-
-            def euclidean(x, w):
-                return linalg.norm(subtract(x, w), axis=-1)
-
-        random_seed : int, optional (default=None)
-            Random seed to use.
-
-        sigma_decay_function : string, optional
-        (default='inverse_decay_to_one')
-            Function that reduces sigma at each iteration.
-            Possible values: 'inverse_decay_to_one', 'linear_decay_to_one',
-                             'asymptotic_decay'
-
-            The default function is:
-                sigma(t) = sigma / (1 + (t * (sigma - 1) / max_iter))
-
-        random_order : bool (default=False)
-            If True, samples in SOM train function are picked in random order.
-            Otherwise the samples are picked sequentially.
-
-        verbose : bool (default=False)
-            If True the status of the training will be
-            printed each time the weights are updated.
-
-        use_epochs : bool (default=False)
-            If True the SOM will be trained for num_iteration epochs.
-            In one epoch the weights are updated len(data) times and
-            the learning rate is constat throughout a single epoch.
-
-        fixed_points : dict (default=None)
-            A dictionary k : (c_1, c_2), that will force the
-            training algorithm to use the neuron with coordinates
-            (c_1, c_2) as winner for the sample k instead of
-            the best matching unit.
+        Args:
+            x (int): X dimension of the SOM. Defaults to 10.
+            y (int): Y dimension of the SOM. Defaults to 10.
+            sigma (float): Spread of the neighborhood function. It should be
+                appropriate for the dimensions of the map and the neighborhood
+                function. In some cases, it helps to set ``sigma`` to
+                ``sqrt(x**2 + y**2)``. Defaults to 1.0.
+            learning_rate (float): Initial learning rate. Appropriate values
+                depend on the training data. By default, at iteration ``t``,
+                ``learning_rate(t) = learning_rate / (1 + t * (100 / max_iter))``.
+                Defaults to 0.5.
+            num_iteration (int): Number of iterations. Appropriate values depend
+                on the training data. Defaults to 1000.
+            decay_function (DecayFunction): Function that reduces the learning
+                rate at each iteration.
+            neighborhood_function (NeighborhoodFunction): Function that weights
+                the neighborhood of a position in the map.
+            topology (Topology): Topology of the map.
+            activation_distance (ActivationDistance): Distance used to activate
+                the map.
+            random_seed (int | None): Random seed to use. Defaults to None.
+            sigma_decay_function (SigmaDecayFunction): Function that reduces
+                ``sigma`` at each iteration. The default function is
+                ``sigma(t) = sigma / (1 + (t * (sigma - 1) / max_iter))``.
+                Defaults to ``SigmaDecayFunction.InverseDecayToOne``.
+            random_order (bool): If True, samples in the SOM training function
+                are picked in random order. Otherwise, samples are picked
+                sequentially. Defaults to False.
+            verbose (bool): If True, the training status is printed each time
+                the weights are updated. Defaults to False.
+            use_epochs (bool): If True, the SOM is trained for
+                ``num_iteration`` epochs. In one epoch, the weights are updated
+                ``len(data)`` times and the learning rate remains constant
+                throughout the epoch. Defaults to False.
+            fixed_points (dict[int, tuple[int, int]] | None): Mapping from a
+                sample index ``k`` to neuron coordinates ``(c_1, c_2)``. The
+                training algorithm uses the specified neuron as the winner for
+                sample ``k`` instead of selecting the best matching unit.
+                Defaults to None.
         """
 
         self.x = x
@@ -145,17 +98,26 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
         self.fixed_points = fixed_points
 
     def fit(self, X, y=None):
-        """
-        Initializes SOM algorithm from minisom library
-        and fits on it data matrix.
+        """Fit the SOM to a data matrix.
 
-        Parameters
-        ----------
-        X : np.array or list
-            Data matrix.
+        Args:
+            X (np.array or list): Data matrix.
+            y (Ignored): Not used; present for API consistency by convention.
 
-        y : Ignored
-            Not used, present here for API consistency by convention.
+        Returns:
+            SklearnMinisom: This fitted estimator.
+
+        Attributes:
+            init_weights_ (ndarray of shape (grid_size_x, grid_size_y, feature_size)):
+                Initial weights of the neural network.
+            labels_ (ndarray of shape (n_samples,)):
+                Labels of each point.
+            weights_ (ndarray of shape (grid_size_x, grid_size_y, feature_size)):
+                Weights of the neural network after training.
+            n_features_in_ (int): Number of features seen during fit.
+            inertia_ (float): Sum of squared distances of samples to their
+                closest neuron weight vector, which provides a measure of the
+                quality of the mapping.
         """
         if sparse.issparse(X):
             X = X.toarray()
@@ -176,11 +138,6 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
 
         self.som.random_weights_init(X)
         self.init_weights_ = self.som.get_weights()
-        """
-        labels_ : ndarray of shape (n_samples,)
-
-        Returns the initial weights of the neural network.
-        """
         self.som.train(
             X,
             self.num_iteration,
@@ -191,66 +148,37 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
         )
 
         self.labels_ = self.predict(X)
-        """
-        labels_ : ndarray of shape (n_samples,)
-
-        Labels of each point.
-        """
         self.weights_ = self.som.get_weights()
-        """
-        weights_ : ndarray of shape (grid_size_x, grid_size_y, feature_size)
-
-        Returns the weights of the neural network.
-        """
         self.n_features_in_ = len(X[0])
-        """
-        n_features_in_ : int
-
-        Number of features seen during fit.
-        """
         self.inertia_ = self._calculate_inertia(X=X)
-        """
-        inertia_ : float
-
-        Sum of squared distances of samples to their closest neuron weight
-        vector, which provides a measure of the quality of the mapping.
-        """
         return self
 
     def transform(self, X):
-        """
-        Transform the data by finding the best matching unit (BMU) for
-        each sample. Returns the BMU coordinates for each input sample.
+        """Transform the data by finding the best matching unit (BMU) for each sample.
 
-        Parameters
-        ----------
-        X : np.array or list
-            Data matrix.
+        Args:
+            X (np.array or list): Data matrix.
 
-        Returns
-        -------
-        X_new : ndarray of shape (n_samples, n_clusters)
-            X transformed in the new space.
+        Returns:
+            ndarray of shape (n_samples, 2): BMU coordinates for each input
+                sample.
         """
         if sparse.issparse(X):
             X = X.toarray()
         return array([self.som.winner(x) for x in X])
 
     def predict(self, X):
-        """
-        Predict the cluster assignment (BMU) for each sample.
-        Returns the grid position (BMU) for each sample as the
-        cluster assignment. Treats each unique BMU as a distinct cluster.
+        """Predict the cluster assignment (BMU) for each sample.
 
-        Parameters
-        ----------
-        X : np.array or list
-            Data matrix.
+        The grid position (BMU) for each sample is returned as its cluster
+        assignment. Each unique BMU is treated as a distinct cluster.
 
-        Returns
-        -------
-        labels : ndarray of shape (n_samples,)
-            Index of the cluster each sample belongs to.
+        Args:
+            X (np.array or list): Data matrix.
+
+        Returns:
+            ndarray of shape (n_samples,): Index of the cluster each sample
+                belongs to.
         """
         if sparse.issparse(X):
             X = X.toarray()
@@ -259,25 +187,19 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
         return bmu_labels
 
     def fit_transform(self, X, y=None, **fit_params):
-        """
-        Fit the SOM and return the transformed
-        BMU coordinates for each input sample.
+        """Fit the SOM and return the transformed BMU coordinates for each sample.
 
-        Convenience method; equivalent to calling fit(X) followed by
-        transform(X).
+        This is a convenience method equivalent to calling ``fit(X)`` followed
+        by ``transform(X)``.
 
-        Parameters
-        ----------
-        X : np.array or list
-            Data matrix.
+        Args:
+            X (np.array or list): Data matrix.
+            y (Ignored): Not used; present for API consistency by convention.
+            **fit_params (dict): Additional fit parameters. Currently ignored.
 
-        y : Ignored
-            Not used, present here for API consistency by convention.
-
-        Returns
-        -------
-        X_new : ndarray of shape (n_samples, n_clusters)
-            X transformed in the new space.
+        Returns:
+            ndarray of shape (n_samples, 2): BMU coordinates for each input
+                sample.
         """
         if sparse.issparse(X):
             X = X.toarray()
@@ -285,46 +207,35 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
         return self.transform(X)
 
     def fit_predict(self, X, y=None):
-        """
-        Fit the SOM and return the predicted cluster assignments.
+        """Fit the SOM and return the predicted cluster assignments.
 
-        Convenience method; equivalent to calling fit(X) followed by
-        predict(X).
+        This is a convenience method equivalent to calling ``fit(X)`` followed
+        by ``predict(X)``.
 
-        Parameters
-        ----------
-        X : np.array or list
-            Data matrix.
+        Args:
+            X (np.array or list): Data matrix.
+            y (Ignored): Not used; present for API consistency by convention.
 
-        y : Ignored
-            Not used, present here for API consistency by convention.
-
-        Returns
-        -------
-        labels : ndarray of shape (n_samples,)
-            Index of the cluster each sample belongs to.
+        Returns:
+            ndarray of shape (n_samples,): Index of the cluster each sample
+                belongs to.
         """
         if sparse.issparse(X):
             X = X.toarray()
         self.fit(X)
         return self.predict(X)
 
-    def get_params(self, deep=True):
-        """
-        Get parameters of the estimator.
+    def get_params(self, deep: bool = True):
+        """Get parameters of the estimator.
 
-        Helpful for hyperparameter tuning using GridSearchCV.
+        This is helpful for hyperparameter tuning using ``GridSearchCV``.
 
-        Parameters
-        ----------
-        deep : bool, default=True
-            If True, will return the parameters for this estimator and
-            contained subobjects that are estimators.
+        Args:
+            deep (bool): If True, return the parameters for this estimator and
+                contained subobjects that are estimators. Defaults to True.
 
-        Returns
-        -------
-        params : dict
-            Parameter names mapped to their values.
+        Returns:
+            dict: Parameter names mapped to their values.
         """
         return {
             "x": self.x,
@@ -345,43 +256,31 @@ class SklearnMinisom(BaseEstimator, TransformerMixin):
         }
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
-        This allows setting parameters during GridSearchCV.
+        """Set the parameters of this estimator.
 
-        The method works on simple estimators as well as on nested objects
-        (such as :class:`~sklearn.pipeline.Pipeline`). The latter have
-        parameters of the form ``<component>__<parameter>`` so that it's
-        possible to update each component of a nested object.
+        This allows setting parameters during ``GridSearchCV``. The method
+        works on simple estimators as well as nested objects, such as
+        ``sklearn.pipeline.Pipeline``. Nested parameters have the form
+        ``<component>__<parameter>`` so that each component can be updated.
 
-        Parameters
-        ----------
-        **params : dict
-            Estimator parameters.
+        Args:
+            **params (dict): Estimator parameters.
 
-        Returns
-        -------
-        self : estimator instance
-            Estimator instance.
+        Returns:
+            estimator instance: This estimator.
         """
         for param, value in params.items():
             setattr(self, param, value)
         return self
 
     def _calculate_inertia(self, X):
-        """
-        Custom inertia function to measure the compactness of clusters
-        in the context of Self-Organizing Maps (SOM).
+        """Measure cluster compactness in the context of a SOM.
 
-        Parameters
-        ----------
-        X : np.array
-            Data matrix.
+        Args:
+            X (np.array): Data matrix.
 
-        Returns
-        -------
-        float
-            The inertia score based on distances to nearest SOM neuron.
+        Returns:
+            float: Inertia score based on distances to the nearest SOM neuron.
         """
         inertia = 0
         for i in range(X.shape[0]):
