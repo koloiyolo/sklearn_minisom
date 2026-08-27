@@ -1,6 +1,6 @@
 [project]
 name = "sklearn_minisom"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
 ]
