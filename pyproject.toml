@@ -1,6 +1,6 @@
 [project]
 name = "sklearn_minisom"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name="Jakub Kołodziej", email="jakvb.kolodziej@gmail.com" },
 ]
@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "minisom[fast]>=2.3.6",
     "numpy>=2.4.2",
