@@ -15,7 +15,7 @@ classifiers = [
 
 requires-python = ">=3.14"
 dependencies = [
-    "minisom>=2.3.5",
+    "minisom[fast]>=2.3.6",
     "numpy>=2.4.2",
     "scikit-learn>=1.8.0",
 ]
