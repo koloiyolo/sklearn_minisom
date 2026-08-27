@@ -4,6 +4,11 @@ from numpy import all, array
 
 # for unit test
 from sklearn_minisom import SklearnMinisom
+from sklearn_minisom.parameters import (
+    ActivationDistance,
+    NeighborhoodFunction,
+    Topology,
+)
 
 
 class TestMinisom(unittest.TestCase):
@@ -14,9 +19,9 @@ class TestMinisom(unittest.TestCase):
             sigma=2.0,
             learning_rate=0.7,
             num_iteration=100,
-            neighborhood_function="test1",
-            topology="test2",
-            activation_distance="test3",
+            neighborhood_function=NeighborhoodFunction.Gaussian,
+            topology=Topology("rectangular"),
+            activation_distance=ActivationDistance.Euclidean,
         )
 
         self.assertEqual(som.x, 2)
@@ -24,9 +29,9 @@ class TestMinisom(unittest.TestCase):
         self.assertEqual(som.sigma, 2.0)
         self.assertEqual(som.learning_rate, 0.7)
         self.assertEqual(som.num_iteration, 100)
-        self.assertEqual(som.neighborhood_function, "test1")
-        self.assertEqual(som.topology, "test2")
-        self.assertEqual(som.activation_distance, "test3")
+        self.assertEqual(som.neighborhood_function, NeighborhoodFunction.Gaussian)
+        self.assertEqual(som.topology, Topology.Rectangular)
+        self.assertEqual(som.activation_distance, ActivationDistance.Euclidean)
 
     def test_fit(self):
         X = array([[1, 2], [3, 4], [5, 6], [7, 8]])
